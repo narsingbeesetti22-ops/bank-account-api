@@ -16,6 +16,12 @@
     },
     "944e9325-66a9-4878-a9df-fd45e1a5e7b2": {
       "payload": "sample_data/json_2.json"
+    },
+    "34dcdb03-1b2d-4edc-9cca-afea23de4c56": {
+      "payload": "sample_data/list_java_1.dwl"
+    },
+    "62c686ea-d6bc-484a-83b6-9fb8bbd46f14": {
+      "payload": "sample_data/list_json.json"
     }
   }
 }
