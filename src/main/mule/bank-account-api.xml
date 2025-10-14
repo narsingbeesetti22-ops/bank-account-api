@@ -7,7 +7,7 @@ http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/em
     </http:listener-config>
     <apikit:config name="bank-account-api-config" api="bank-account-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <snowflake:snowflake-config name="Snowflake_Config" doc:name="Snowflake Config" doc:id="0032d3fb-a4d5-4db1-a635-b3aaa46a6509" >
-		<snowflake:snowflake-connection accountName="PTWXDSX-CF63578" warehouse="COMPUTE_WH" database="HOSPITALLOCATORDB" schema="PUBLIC" user="SINGSING" password="Narsing@12345678" role="ACCOUNTADMIN" />
+		<snowflake:snowflake-connection accountName="SBMQKDP-TT42813" warehouse="COMPUTE_WH" database="MYDATABASE" schema="PUBLIC" user="SINGSING" password="Singsing@123456789" role="ACCOUNTADMIN" />
 	</snowflake:snowflake-config>
 	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="e464a882-099a-4dd3-9243-d027744071f1" >
 		<email:smtp-connection host="smtp.gmail.com" port="587" user="narsingbeesetti06@gmail.com" password="kejo yanz wjpo vnum" >
@@ -26,7 +26,7 @@ http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/em
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:error-response>
         </http:listener>
-        <apikit:router config-ref="bank-account-api-config" />
+		<apikit:router config-ref="bank-account-api-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:BAD_REQUEST">
                 <ee:transform doc:name="Transform Message">
@@ -137,112 +137,103 @@ output application/json
     </flow>
     <flow name="delete:\accounts\(accountNumber):bank-account-api-config">
 		<logger level="INFO" doc:name="Start Flow" doc:id="45422824-22a7-4376-975b-c0774e6d64fc" message="----------------------------------Start Flow------------------------------"/>
-		<set-variable value="#[%dw 2.0&#10;output application/json&#10;var inp = []&#10;---&#10;inp&lt;&lt;payload reduce ((item, accumulator) -&gt; item)]" doc:name="inputPayload" doc:id="a836c8cf-f8d4-4682-8f6c-09b13b55d3c2" variableName="inputPayload"/>
-		<snowflake:select doc:name="Verify account" doc:id="1a924174-c9e0-4244-bf4e-eb1a62ba623d" config-ref="Snowflake_Config">
-			<snowflake:sql ><![CDATA[select * from bank_cust_detailes where accountNumber = :accountNumber]]></snowflake:sql>
+		<set-variable value="#[attributes.uriParams.accountNumber as String]" doc:name="accountNumber" doc:id="713829a2-6b5d-439d-b8fa-a90296cc3365" variableName="accountNumber"/>
+		<snowflake:select doc:name="verify account" doc:id="51fde332-de7e-4c70-b1e6-1da22d926aac" config-ref="Snowflake_Config">
+			<snowflake:sql ><![CDATA[select * from bank_cust_detailes where accountNumber = :ACCOUNTNUMBER]]></snowflake:sql>
 			<snowflake:input-parameters ><![CDATA[#[{
-	accountNumber: attributes.uriParams.accountNumber
+	"ACCOUNTNUMBER": attributes.uriParams.accountNumber
 }]]]></snowflake:input-parameters>
 		</snowflake:select>
-		<choice doc:name="Choice" doc:id="fc9f9ab1-bbc5-40ef-8dab-20836b0aad86" >
-			<when expression="#[!isEmpty(payload)]">
-				<ee:transform doc:name="Account not found" doc:id="699e3ac7-0209-420d-b8b9-39697aedf654" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
+		<choice doc:name="Choice" doc:id="f75aba1a-40d2-4c88-a775-3793d19ae56b" >
+			<when expression="#[sizeOf(payload) == 0]">
+				<ee:transform doc:name="Account doesn't exit" doc:id="43c1c587-b5d5-48f9-ba19-4003fdba6a1e">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	"message": "Account not found",
-	"accountNumber": payload.ACCOUNTNUMBER[0]
+	"message": "Account doesn't exist",
+	"accountNumber": vars.accountNumber
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
 			</when>
 			<otherwise >
-				<snowflake:delete doc:name="Delete account from db" doc:id="d16d2afa-26a2-465f-a4e4-fd1fa9647f8e" config-ref="Snowflake_Config" target="dbresponse">
-					<snowflake:sql ><![CDATA[delete from bank_cust_detailes where accountNumber = :accountNumber]]></snowflake:sql>
-					<snowflake:input-parameters ><![CDATA[#[{
-	accountNumber: attributes.uriParams.accountNumber
+				<snowflake:delete doc:name="Delete account from db" doc:id="d16d2afa-26a2-465f-a4e4-fd1fa9647f8e" config-ref="Snowflake_Config">
+					<snowflake:sql><![CDATA[delete from bank_cust_detailes where ACCOUNTNUMBER = :accountNumber]]></snowflake:sql>
+					<snowflake:input-parameters><![CDATA[#[{
+	"accountNumber": vars.accountNumber
 }]]]></snowflake:input-parameters>
 				</snowflake:delete>
-				<ee:transform doc:name="response" doc:id="38e062cd-1b05-4c3a-8564-0dbb67a706d5" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
+				<ee:transform doc:name="response" doc:id="38e062cd-1b05-4c3a-8564-0dbb67a706d5">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-  message: "Account deactivated successfully",
-  accountNumber: payload.ACCOUNTNUMBER[0]
+  "message": "Account deactivated successfully",
+  "accountNumber": vars.accountNumber
 } ]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
+				<logger level="INFO" doc:name="End Flow" doc:id="977b548f-f572-4762-9b62-078d34965d63" message="#[payload]"/>
 			</otherwise>
 		</choice>
     </flow>
     <flow name="patch:\accounts\(accountNumber):application\json:bank-account-api-config">
 		<logger level="INFO" doc:name="Start Flow" doc:id="bb6e420a-db66-41d8-bb8d-62fa3d27f850" message="---------------------------Start Flow---------------------------"/>
-		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;payload mapObject ((value, key, index) -&gt; {&#10;    (key): value&#10;})]" doc:name="inputPayload" doc:id="09532ce4-b7b5-4af5-a4c9-8b6dccf01022" variableName="inputPayload"/>
-		<snowflake:select doc:name="verify account" doc:id="443e8c6b-f34a-4791-92e6-4d0750f22bbe" config-ref="Snowflake_Config">
-			<snowflake:sql ><![CDATA[select * from bank_cust_detailes where accountNumber = :accountNumber]]></snowflake:sql>
-			<snowflake:input-parameters ><![CDATA[#[{
-	accountNumber: attributes.uriParams.accountNumber
-}]]]></snowflake:input-parameters>
-		</snowflake:select>
-		<choice doc:name="Choice" doc:id="37ca6f99-77c8-4db2-a8e0-bc92c81e9bba" >
-			<when expression="#[payload.updateCount == 1]">
-				<ee:transform doc:name="No changes req" doc:id="4287bb4e-9a12-4de4-834c-4273ad70c414" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
+		<set-variable value="#[attributes.uriParams.accountNumber as String]" doc:name="accountNumber" doc:id="2c45eaca-d6e4-4c6b-a78c-40931798a641" variableName="accountNumber"/>
+		<snowflake:update doc:name="Update requested data" doc:id="d458f075-8670-429c-ae84-4a0d84974482" config-ref="Snowflake_Config" target="dbresponse">
+					<snowflake:sql><![CDATA[UPDATE bank_cust_detailes
+SET FULLNAME =:FullName,
+    ADDRESS =:address,
+    MOBILENUMBER =:mobileNumber
+WHERE ACCOUNTNUMBER =:accountNumber]]></snowflake:sql>
+					<snowflake:input-parameters><![CDATA[#[%dw 2.0
 output application/json
 ---
 {
-	message: "Account Number not found",
-	accountNumber: payload.ACCOUNTNUMBER[0]
+    FullName: ((payload.FULLNAME default [""])),
+    address: ((payload.ADDRESS default [""])),
+    mobileNumber: ((payload.MOBILENUMBER default [""])),
+    accountNumber: vars.accountNumber
+}]]]></snowflake:input-parameters>
+				</snowflake:update>
+		<ee:transform doc:name="After DB" doc:id="af0583a7-afb3-4c0a-976f-44e29f0b978c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="response" doc:id="92f376aa-d8fd-49dd-bc51-59206e77b270">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ 
+	"message": "Account updated successfully",
+    "accountNumber": vars.accountNumber
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
-			</when>
-			<otherwise >
-				<snowflake:update doc:name="Update requested data" doc:id="d458f075-8670-429c-ae84-4a0d84974482" config-ref="Snowflake_Config" target="insertDBresponse">
-					<snowflake:sql ><![CDATA[UPDATE bank_cust_detailes
-SET 
-    FullName = :FullName,
-    address = :address,
-    mobileNumber = :mobileNumber
-WHERE accountNumber = :accountNumber;
-]]></snowflake:sql>
-					<snowflake:input-parameters ><![CDATA[#[{
-	"FullName": vars.inputPayload.FullName,
-	"address": vars.inputPayload.address,
-	"mobileNumber": vars.inputPayload.mobileNumber,
-	"accountNumber": attributes.uriParams.accountNumber
-}]]]></snowflake:input-parameters>
-				</snowflake:update>
-				<ee:transform doc:name="Response" doc:id="62bc07ae-03e4-4209-bd29-1af8dad2c3a6" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Account details updated successfully",
-  accountNumber: payload.ACCOUNTNUMBER[0]
-} ]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
-			</otherwise>
-		</choice>
+		<logger level="INFO" doc:name="End flow" doc:id="f2f3f1d6-94b3-4d8a-9f23-1b4313ab6e9a" message="#[payload]" />
     </flow>
     <flow name="get:\accounts\(accountNumber):bank-account-api-config">
 		<logger level="INFO" doc:name="Start Flow" doc:id="0d967a4d-3b48-462a-a67c-489b6a1b6416" message="-------------------------------Start Flow----------------------------------"/>
-		<set-variable value="#[%dw 2.0&#10;output application/json&#10;var inp = []&#10;---&#10;inp&lt;&lt;payload reduce ((item, accumulator) -&gt; item)]" doc:name="inputPayload" doc:id="fdba8561-b04f-4a2a-bbb3-9094c12be4fa" variableName="inputPayload"/>
+		<set-variable value="#[attributes.uriParams.accountNumber]" doc:name="accountNumber" doc:id="b2babe1c-6998-4272-afba-6d75389b9563" variableName="accountNumber"/>
+		<ee:cache doc:name="Cache" doc:id="fcbda7e7-68c7-41fe-9fd0-3c06b86039e7" >
+			<logger level="INFO" doc:name="inside cache" doc:id="fb7e243e-0731-4aca-9880-9ac79dd28bac" message="-------------------inside cahe before DB--------------------------" />
+		</ee:cache>
 		<snowflake:select doc:name="verify account" doc:id="a2cadbc5-461e-4bfb-97f4-763dc02e172f" config-ref="Snowflake_Config">
-			<snowflake:sql ><![CDATA[select * from bank_cust_detailes where accountNumber = :accountNumber]]></snowflake:sql>
+			<snowflake:sql><![CDATA[select * from bank_cust_detailes where accountNumber = :account]]></snowflake:sql>
 			<snowflake:input-parameters ><![CDATA[#[{
-	"accountNumber": attributes.uriParams.accountNumber
+	"account": vars.accountNumber
 }]]]></snowflake:input-parameters>
 		</snowflake:select>
 		<choice doc:name="Choice" doc:id="57cb7747-2786-47d0-b002-67aab0c47100" >
-			<when expression="#[isEmpty(payload)]">
+			<when expression="#[sizeOf(payload) == 0]">
 				<ee:transform doc:name="Account not found" doc:id="1ca4d496-027b-4d94-a3eb-335e1d8f4527" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
@@ -250,7 +241,7 @@ output application/json
 ---
 {
 	"message": "Account not found",
-	"accountNumber": payload.ACCOUNTNUMBER[0]
+	"accountNumber": vars.accountNumber
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
@@ -261,14 +252,16 @@ output application/json
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-payload map ( item , index ) -> {
-	accountNumber: item.ACCOUNTNUMBER,
-	FullName: item.FULLNAME,
-	dateOfBirth: item.DATEOFBIRTH as String,
-	mobileNumber: item.MOBILENUMBER,
-	email: item.EMAIL,
-	address: item.ADDRESS
-}]]></ee:set-payload>
+(payload map (item) -> {
+    accountNumber: item.ACCOUNTNUMBER,
+    fullName: item.FULLNAME,
+    dateOfBirth: item.DATEOFBIRTH as String,
+    mobileNumber: item.MOBILENUMBER,
+    email: item.EMAIL,
+    address: item.ADDRESS,
+    bankName: item.BANKNAME
+})[0]
+]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
 				<logger level="INFO" doc:name="End Flow" doc:id="95eec8a2-a240-4383-a793-c86686db452a" message="----------------------------End Flow------------------------#[payload]"/>
@@ -279,15 +272,18 @@ payload map ( item , index ) -> {
 		<logger level="INFO" doc:name="Start Flow" doc:id="3d3a7053-3734-4567-ae5b-151bb2ad985c" message="----------------------------Start Flow-------------------"/>
 		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	adharNumber: attributes.queryParams.adharNumber,&#10;	bankName: attributes.queryParams.bankName&#10;}]" doc:name="inputAttributes" doc:id="afaa0ce7-9c1d-479b-894d-7f49ded8a912" variableName="inputAttributes"/>
 		<set-variable value="#[%dw 2.0&#10;output application/json&#10;var inp = []&#10;---&#10;inp&lt;&lt;payload reduce ((item, accumulator) -&gt; item)]" doc:name="inputPayload" doc:id="439f0f1f-6c4b-4436-a554-56d0c3da6439" variableName="inputPayload"/>
+		<ee:cache doc:name="Cache" doc:id="271deec3-410d-4cd6-8739-1acd4367128e" >
+			<logger level="INFO" doc:name="inside cache" doc:id="7148389e-4e06-45b0-998a-d3a58d62eb37" message="-------------------inside cahe before DB--------------------------"/>
+		</ee:cache>
 		<snowflake:select doc:name="verify account" doc:id="0ef28a48-c6b8-4585-8cd8-80eea4664a59" config-ref="Snowflake_Config">
-			<snowflake:sql ><![CDATA[select accountNumber from bank_cust_detailes where email = :email and dateOfBirth = :dateOfBirth and adharNumber = :adharNumber]]></snowflake:sql>
-			<snowflake:input-parameters ><![CDATA[#[%dw 2.0
+			<snowflake:sql><![CDATA[select "ACCOUNTNUMBER" from bank_cust_detailes where email = :email and dateOfBirth = :dateOfBirth and adharNumber = :adharNumber]]></snowflake:sql>
+			<snowflake:input-parameters><![CDATA[#[%dw 2.0
 output application/json
 ---
 {
 	"email": payload.email,
 	"dateOfBirth": payload.dateOfBirth,
-	"adharNumber": attributes.queryParams.adharNumber
+	"adharNumber": vars.inputAttributes.adharNumber
 }]]]></snowflake:input-parameters>
 		</snowflake:select>
 		<ee:transform doc:name="After DB" doc:id="156a881b-af8b-4d46-80e0-667dc48fb1f2" >
@@ -306,8 +302,10 @@ payload[0]]]></ee:set-payload>
 output application/json
 ---
 {
-	"message": "Account already exists for given " ++ vars.inputPayload.FullName as String,
-    "accountNumber": payload.ACCOUNTNUMBER
+    "message": "Account already exists",
+    "accountNumber": payload.ACCOUNTNUMBER,
+    "adharNumber": vars.inputAttributes.adharNumber,
+    "bankName": vars.inputAttributes.bankName
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
@@ -387,6 +385,7 @@ output application/json
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
+				<logger level="INFO" doc:name="End Flow" doc:id="2ffd8187-3b49-4f45-a379-8c7340f9077b" message="#[payload]"/>
 			</otherwise>
 		</choice>
     </flow>
