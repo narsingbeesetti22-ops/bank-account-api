@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bank Account API - UI</title>
+ 
+<style>
+    body { font-family: Arial; background:#e8f4ff; padding:25px; text-align:center; }
+    h2 { color:#004aad; }
+ 
+    .box{
+        background:white; width:600px; margin:20px auto; padding:20px;
+        border-radius:10px; box-shadow:0 0 12px rgba(0,0,0,0.2); text-align:left;
+    }
+ 
+    input,select {
+        width:90%; padding:10px; margin-top:8px; border-radius:6px;
+        font-size:15px; border:1px solid #aaa;
+    }
+    button{
+        padding:10px 25px; background:#0066ff; color:white;
+        border:none; border-radius:6px; margin-top:10px; cursor:pointer;font-size:16px;
+    }
+    button:hover{ background:#0050c9; }
+    .success{ background:#e5ffe9; border-left:6px solid green; padding:15px; margin-top:10px;}
+    .error{ background:#ffe5e5; border-left:6px solid red; padding:15px; margin-top:10px;}
+    pre{ background:#f2f2f2; padding:10px; border-radius:6px; }
+</style>
+</head>
+ 
+<body>
+ 
+<h2>🏦 Bank Account API - UI</h2>
+ 
+<script>
+    const BASE_URL = "https://your-mulesoft-url/accounts"; // ← Replace here
+</script>
+ 
+ 
+<!-- ============= CREATE ACCOUNT (POST) ================== -->
+<div class="box">
+<h3>Create New Account</h3>
+ 
+<input id="fn" placeholder="Full Name" />
+<input id="dob" type="date" />
+<input id="mob" placeholder="Mobile Number" />
+<input id="mail" placeholder="Email" />
+<input id="add" placeholder="Address" />
+ 
+<select id="bank">
+    <option value="SBI">SBI</option>
+    <option value="HDFC">HDFC</option>
+    <option value="APGVB">APGVB</option>
+    <option value="AXIS">AXIS</option>
+</select>
+ 
+<button onclick="createAccount()">Create Account</button>
+<div id="postResult"></div>
+</div>
+ 
+<script>
+async function createAccount(){
+    const body = {
+        FullName: fn.value,
+        dateOfBirth: dob.value,
+        mobileNumber: mob.value,
+        email: mail.value,
+        address: add.value
+    };
+ 
+    try{
+        const res = await fetch(BASE_URL, {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body:JSON.stringify(body)
+        });
+        const result = await res.json();
+        postResult.innerHTML = `<div class="success">✔ ${result.message} <br>Account No: <b>${result.accountNumber}</b></div>`;
+    } catch(e){
+        postResult.innerHTML = `<div class="error">Failed to create account</div>`;
+    }
+}
+</script>
+ 
+ 
+ 
+<!-- ============= GET ACCOUNT (GET) ================== -->
+<div class="box">
+<h3>Get Account Details</h3>
+ 
+<input id="accSearch" placeholder="Enter Account Number" />
+<button onclick="getAccount()">Search</button>
+<div id="getResult"></div>
+ 
+<script>
+async function getAccount(){
+    try{
+        const res = await fetch(`${BASE_URL}/${accSearch.value}`);
+        const result = await res.json();
+ 
+        if(result.message === "Account not found"){
+            getResult.innerHTML = `<div class="error">${result.message}</div>`;
+            return;
+        }
+ 
+        getResult.innerHTML = `<pre>${JSON.stringify(result,null,2)}</pre>`;
+    }catch(e){
+        getResult.innerHTML = `<div class="error">Unable to fetch details</div>`;
+    }
+}
+</script>
+</div>
+ 
+ 
+ 
+<!-- ============= UPDATE (PATCH) ================== -->
+<div class="box">
+<h3>Update Account</h3>
+ 
+<input id="accUpdate" placeholder="Account Number"/>
+<input id="upName" placeholder="Update Name (Optional)" />
+<input id="upAddr" placeholder="Update Address (Optional)" />
+<input id="upMob" placeholder="Update Mobile (Optional)" />
+<input id="upMail" placeholder="Update Email (Optional)" />
+ 
+<button onclick="updateAccount()">Update</button>
+<div id="patchResult"></div>
+ 
+<script>
+async function updateAccount(){
+    const body = {
+        FullName: upName.value || undefined,
+        address: upAddr.value || undefined,
+        mobileNumber: upMob.value || undefined,
+        email: upMail.value || undefined
+    };
+ 
+    try{
+        const res = await fetch(`${BASE_URL}/${accUpdate.value}`, {
+            method:"PATCH",
+            headers:{ "Content-Type":"application/json" },
+            body:JSON.stringify(body)
+        });
+        const result = await res.json();
+        patchResult.innerHTML = `<div class="success">${result.message}</div>`;
+    } catch(e){
+        patchResult.innerHTML = `<div class="error">Update failed</div>`;
+    }
+}
+</script>
+</div>
+ 
+ 
+ 
+<!-- ============= DELETE (DEACTIVATE) ================== -->
+<div class="box">
+<h3>Deactivate Account</h3>
+ 
+<input id="accDelete" placeholder="Account Number"/>
+<button onclick="deleteAccount()">Deactivate</button>
+<div id="deleteResult"></div>
+ 
+<script>
+async function deleteAccount(){
+    try{
+        const res = await fetch(`${BASE_URL}/${accDelete.value}`, { method:"DELETE" });
+        const result = await res.json();
+ 
+        if(result.message === "Account not found")
+            deleteResult.innerHTML = `<div class="error">${result.message}</div>`;
+        else
+            deleteResult.innerHTML = `<div class="success">${result.message}</div>`;
+    }catch(e){
+        deleteResult.innerHTML = `<div class="error">Unable to delete</div>`;
+    }
+}
+</script>
+</div>
+ 
+</body>
+</html>
+ 
