@@ -1,180 +1,156 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Bank Account API - UI</title>
+  <title>Bank Account Portal</title>
  
-<style>
-    body { font-family: Arial; background:#e8f4ff; padding:25px; text-align:center; }
-    h2 { color:#004aad; }
- 
-    .box{
-        background:white; width:600px; margin:20px auto; padding:20px;
-        border-radius:10px; box-shadow:0 0 12px rgba(0,0,0,0.2); text-align:left;
+  <style>
+    body{
+      background:#eef3ff;
+      font-family:calibri;
+      margin:0;
     }
- 
-    input,select {
-        width:90%; padding:10px; margin-top:8px; border-radius:6px;
-        font-size:15px; border:1px solid #aaa;
+    header{
+      background:#0047ab; color:white;
+      padding:20px; text-align:center;
+      font-size:28px; letter-spacing:1px;
+    }
+    .box{
+      width:450px; background:white;
+      margin:25px auto; padding:25px;
+      border-radius:12px;
+      box-shadow:0 0 15px rgba(0,0,0,.1);
+    }
+    .box h2{margin:0;text-align:center;}
+    input,button,select{
+      width:100%;padding:11px;margin-top:10px;
+      border-radius:6px;font-size:15px;
+      border:1px solid #bbb;
     }
     button{
-        padding:10px 25px; background:#0066ff; color:white;
-        border:none; border-radius:6px; margin-top:10px; cursor:pointer;font-size:16px;
+      background:#0047ab;color:white;font-weight:bold;
+      cursor:pointer;
     }
-    button:hover{ background:#0050c9; }
-    .success{ background:#e5ffe9; border-left:6px solid green; padding:15px; margin-top:10px;}
-    .error{ background:#ffe5e5; border-left:6px solid red; padding:15px; margin-top:10px;}
-    pre{ background:#f2f2f2; padding:10px; border-radius:6px; }
-</style>
-</head>
+    button:hover{
+      background:#002f77;
+    }
+    .result{
+      background:#d9ffda;border-left:5px solid green;
+      padding:10px;margin-top:10px;display:none;
+    }
+  </style>
  
+</head>
 <body>
  
-<h2>🏦 Bank Account API - UI</h2>
- 
-<script>
-    const BASE_URL = "https://your-mulesoft-url/accounts"; // ← Replace here
-</script>
+<header>🏦 Bank Account Management Portal</header>
  
  
-<!-- ============= CREATE ACCOUNT (POST) ================== -->
+<!-- CREATE ACCOUNT -->
 <div class="box">
-<h3>Create New Account</h3>
- 
-<input id="fn" placeholder="Full Name" />
-<input id="dob" type="date" />
-<input id="mob" placeholder="Mobile Number" />
-<input id="mail" placeholder="Email" />
-<input id="add" placeholder="Address" />
- 
-<select id="bank">
-    <option value="SBI">SBI</option>
-    <option value="HDFC">HDFC</option>
-    <option value="APGVB">APGVB</option>
-    <option value="AXIS">AXIS</option>
-</select>
+<h2>Create Account</h2>
+<input id="cName" placeholder="Full Name">
+<input id="cDob" type="date" placeholder="DOB">
+<input id="cMobile" placeholder="Mobile Number">
+<input id="cBank" placeholder="Bank Name">
+<input id="cEmail" placeholder="Email">
+<input id="cAddress" placeholder="Address">
+<input id="cAdhar" placeholder="Aadhar Number">
  
 <button onclick="createAccount()">Create Account</button>
-<div id="postResult"></div>
-</div>
- 
-<script>
-async function createAccount(){
-    const body = {
-        FullName: fn.value,
-        dateOfBirth: dob.value,
-        mobileNumber: mob.value,
-        email: mail.value,
-        address: add.value
-    };
- 
-    try{
-        const res = await fetch(BASE_URL, {
-            method:"POST",
-            headers:{ "Content-Type":"application/json" },
-            body:JSON.stringify(body)
-        });
-        const result = await res.json();
-        postResult.innerHTML = `<div class="success">✔ ${result.message} <br>Account No: <b>${result.accountNumber}</b></div>`;
-    } catch(e){
-        postResult.innerHTML = `<div class="error">Failed to create account</div>`;
-    }
-}
-</script>
- 
- 
- 
-<!-- ============= GET ACCOUNT (GET) ================== -->
-<div class="box">
-<h3>Get Account Details</h3>
- 
-<input id="accSearch" placeholder="Enter Account Number" />
-<button onclick="getAccount()">Search</button>
-<div id="getResult"></div>
- 
-<script>
-async function getAccount(){
-    try{
-        const res = await fetch(`${BASE_URL}/${accSearch.value}`);
-        const result = await res.json();
- 
-        if(result.message === "Account not found"){
-            getResult.innerHTML = `<div class="error">${result.message}</div>`;
-            return;
-        }
- 
-        getResult.innerHTML = `<pre>${JSON.stringify(result,null,2)}</pre>`;
-    }catch(e){
-        getResult.innerHTML = `<div class="error">Unable to fetch details</div>`;
-    }
-}
-</script>
+<div id="createResult" class="result"></div>
 </div>
  
  
  
-<!-- ============= UPDATE (PATCH) ================== -->
+<!-- SEARCH ACCOUNT -->
 <div class="box">
-<h3>Update Account</h3>
+<h2>Get Account</h2>
+<input id="getAcc" placeholder="Enter Account Number">
+<button onclick="getAccount()">Fetch</button>
+<div id="getResult" class="result"></div>
+</div>
  
-<input id="accUpdate" placeholder="Account Number"/>
-<input id="upName" placeholder="Update Name (Optional)" />
-<input id="upAddr" placeholder="Update Address (Optional)" />
-<input id="upMob" placeholder="Update Mobile (Optional)" />
-<input id="upMail" placeholder="Update Email (Optional)" />
+ 
+ 
+<!-- UPDATE ACCOUNT -->
+<div class="box">
+<h2>Update Account</h2>
+<input id="uAcc" placeholder="Account Number">
+<input id="uName" placeholder="Full Name">
+<input id="uAddr" placeholder="Address">
+<input id="uMob" placeholder="Mobile Number">
  
 <button onclick="updateAccount()">Update</button>
-<div id="patchResult"></div>
- 
-<script>
-async function updateAccount(){
-    const body = {
-        FullName: upName.value || undefined,
-        address: upAddr.value || undefined,
-        mobileNumber: upMob.value || undefined,
-        email: upMail.value || undefined
-    };
- 
-    try{
-        const res = await fetch(`${BASE_URL}/${accUpdate.value}`, {
-            method:"PATCH",
-            headers:{ "Content-Type":"application/json" },
-            body:JSON.stringify(body)
-        });
-        const result = await res.json();
-        patchResult.innerHTML = `<div class="success">${result.message}</div>`;
-    } catch(e){
-        patchResult.innerHTML = `<div class="error">Update failed</div>`;
-    }
-}
-</script>
+<div id="updateResult" class="result"></div>
 </div>
  
  
  
-<!-- ============= DELETE (DEACTIVATE) ================== -->
+<!-- DELETE ACCOUNT -->
 <div class="box">
-<h3>Deactivate Account</h3>
+<h2>Delete Account</h2>
+<input id="dAcc" placeholder="Enter Account Number">
+<button onclick="deleteAccount()">Delete</button>
+<div id="deleteResult" class="result"></div>
+</div>
  
-<input id="accDelete" placeholder="Account Number"/>
-<button onclick="deleteAccount()">Deactivate</button>
-<div id="deleteResult"></div>
+ 
  
 <script>
-async function deleteAccount(){
-    try{
-        const res = await fetch(`${BASE_URL}/${accDelete.value}`, { method:"DELETE" });
-        const result = await res.json();
+const API = "http://localhost:8051/api";  // change if deployed
  
-        if(result.message === "Account not found")
-            deleteResult.innerHTML = `<div class="error">${result.message}</div>`;
-        else
-            deleteResult.innerHTML = `<div class="success">${result.message}</div>`;
-    }catch(e){
-        deleteResult.innerHTML = `<div class="error">Unable to delete</div>`;
-    }
+async function createAccount(){
+ let body = {
+   FullName : cName.value,
+   dateOfBirth : cDob.value,
+   mobileNumber : cMobile.value,
+   bankName : cBank.value,
+   email : cEmail.value,
+   address : cAddress.value
+ };
+ let res = await fetch(`${API}/accounts?adharNumber=${cAdhar.value}&bankName=${cBank.value}`,{
+   method:"POST",
+   headers:{ "Content-Type":"application/json" },
+   body: JSON.stringify(body)
+ });
+ let data = await res.json();
+ createResult.style.display="block";
+ createResult.innerHTML = JSON.stringify(data,null,2);
+}
+ 
+async function getAccount(){
+ let id = getAcc.value;
+ let res = await fetch(`${API}/accounts/${id}`);
+ let data = await res.json();
+ getResult.style.display="block";
+ getResult.innerHTML = JSON.stringify(data,null,2);
+}
+ 
+async function updateAccount(){
+ let id = uAcc.value;
+ let body = {
+   FULLNAME:uName.value,
+   ADDRESS:uAddr.value,
+   MOBILENUMBER:uMob.value
+ };
+ let res = await fetch(`${API}/accounts/${id}`,{
+   method:"PATCH",
+   headers:{ "Content-Type":"application/json" },
+   body:JSON.stringify(body)
+ });
+ let data = await res.json();
+ updateResult.style.display="block";
+ updateResult.innerHTML = JSON.stringify(data,null,2);
+}
+ 
+async function deleteAccount(){
+ let id = dAcc.value;
+ let res = await fetch(`${API}/accounts/${id}`,{ method:"DELETE" });
+ let data = await res.json();
+ deleteResult.style.display="block";
+ deleteResult.innerHTML = JSON.stringify(data,null,2);
 }
 </script>
-</div>
  
 </body>
 </html>
